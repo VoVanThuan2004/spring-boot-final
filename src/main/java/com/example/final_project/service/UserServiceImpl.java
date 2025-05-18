@@ -155,6 +155,7 @@ public class UserServiceImpl implements UserService {
                     .fullName(user.get().getFullName())
                     .email(user.get().getEmail())
                     .active(user.get().isActive())
+                    .loyaltyPoints(user.get().getLoyaltyPoint().getPoints())
                     .addresses(addresses.stream()
                             .map(address -> AddressResponse.builder()
                                     .addressId(address.getAddress_id())
@@ -246,7 +247,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserResponse> getAllUsers(Pageable pageable) {
-        Page<User> users = userRepository.findByIdNot(2, pageable);
+        Optional<Role> role = roleRepository.findByName("ADMIN");
+        if (role.isEmpty()) {
+            return null;
+        }
+        Optional<UserRole> userRole = userRoleRepository.findByRoleId(role.get().getId());
+        if (userRole.isEmpty()) {
+            return null;
+        }
+        Page<User> users = userRepository.findByIdNot(userRole.get().getUser().getId(), pageable);
 
         return users.map(
                 user -> {
