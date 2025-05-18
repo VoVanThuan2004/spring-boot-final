@@ -67,6 +67,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/v1/cart/**").permitAll()
                         .requestMatchers("/api/v1/user/").authenticated()
                         .requestMatchers("/api/v1/reviews/**").permitAll()
+                        .requestMatchers("/api/v1/dashboard/summary").permitAll()              
                         .requestMatchers("/api/v1/dashboard/**").permitAll()
                         .requestMatchers("/api/v1/change-password/user").authenticated()
                         .requestMatchers("/ws/**").permitAll()
