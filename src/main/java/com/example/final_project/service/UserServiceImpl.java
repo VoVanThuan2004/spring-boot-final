@@ -155,7 +155,7 @@ public class UserServiceImpl implements UserService {
                     .fullName(user.get().getFullName())
                     .email(user.get().getEmail())
                     .active(user.get().isActive())
-                    .loyaltyPoints(user.get().getLoyaltyPoint().getPoints())
+                    .loyaltyPoints(user.get().getLoyaltyPoint() == null ? 0 : user.get().getLoyaltyPoint().getPoints())
                     .addresses(addresses.stream()
                             .map(address -> AddressResponse.builder()
                                     .addressId(address.getAddress_id())
