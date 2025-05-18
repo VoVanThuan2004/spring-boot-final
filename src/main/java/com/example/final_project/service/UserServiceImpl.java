@@ -247,15 +247,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserResponse> getAllUsers(Pageable pageable) {
-        Optional<Role> role = roleRepository.findByName("ADMIN");
-        if (role.isEmpty()) {
-            return null;
-        }
-        Optional<UserRole> userRole = userRoleRepository.findByRoleId(role.get().getId());
-        if (userRole.isEmpty()) {
-            return null;
-        }
-        Page<User> users = userRepository.findByIdNot(userRole.get().getUser().getId(), pageable);
+        // Optional<Role> role = roleRepository.findByName("ADMIN");
+        // if (role.isEmpty()) {
+        //     return null;
+        // }
+        // Optional<UserRole> userRole = userRoleRepository.findByRoleId(role.get().getId());
+        // if (userRole.isEmpty()) {
+        //     return null;
+        // }
+        Page<User> users = userRepository.findByIdNot(1, pageable);
 
         return users.map(
                 user -> {
