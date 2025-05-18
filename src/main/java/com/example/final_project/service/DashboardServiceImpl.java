@@ -34,7 +34,7 @@ public class DashboardServiceImpl implements DashboardService {
         int newUsersThisMonth = totalUsers;  // Cần sửa chỗ nay
         List<Order> orders = orderRepository.findByStatus("Delivered");
         double totalOrders = orders.size();
-        double totalRevenue = orderRepository.sumTotalAmountByStatus("Delivered");
+        double totalRevenue = orderRepository.sumTotalAmountByStatus("Pending");
 
         Map<String, Object> summary = new HashMap<>();
         summary.put("totalUsers", totalUsers);
