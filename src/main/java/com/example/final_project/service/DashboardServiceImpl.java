@@ -31,8 +31,8 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     public Map<String, Object> getDashboardSummary() {
         int totalUsers = (int) userRepository.count();
-        int newUsersThisMonth = totalUsers;  // Cần sửa chỗ nay
-        List<Order> orders = orderRepository.findByStatus("Delivered");
+        int newUsersThisMonth = totalUsers - 1;  // Cần sửa chỗ nay
+        List<Order> orders = orderRepository.findByStatus("Pending");
         double totalOrders = orders.size();
         double totalRevenue = orderRepository.sumTotalAmountByStatus("Pending");
 
