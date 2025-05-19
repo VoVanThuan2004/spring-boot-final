@@ -14,5 +14,6 @@ public class UserResponse {
     private String email;
     private String image;
     private boolean active;
+    private int loyaltyPoints;
     private List<AddressResponse> addresses;
 }
