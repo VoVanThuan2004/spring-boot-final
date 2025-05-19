@@ -198,8 +198,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
             return ResponseEntity.badRequest().body("Product variant not found");
         }
 
-        if (discountPercent > 0.5) {
-            return ResponseEntity.badRequest().body("Discount percent must less than 0.5");
+        if (discountPercent > 1.0) {
+            return ResponseEntity.badRequest().body("Discount percent must less than 1.0");
         }
 
         productVariant.get().getProduct().setDiscountPercent(discountPercent);
