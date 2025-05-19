@@ -14,7 +14,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
 //            "JOIN p.productVariantList v JOIN v.orderItems oi GROUP BY p.category.name")
 //    List<Object[]> getProductCategoryStats();
 
-    @Query("SELECT p FROM Product p WHERE p.discountPercent != 1")
+    @Query("SELECT p FROM Product p WHERE p.discountPercent != 0")
     List<Product> findByDiscountPercent();
 
     @Query("SELECT p FROM Product p WHERE p.createdAt BETWEEN :startOfMonth AND :endOfMonth")
