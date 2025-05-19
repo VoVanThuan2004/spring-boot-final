@@ -46,7 +46,7 @@ public class ProductVariantServiceImpl implements ProductVariantService {
                     .priceDiff(productVariantRequest.getPriceDiff())
                     .product(product.get())
                     .createdAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))
-                    .discountPercent(1)
+                    .discountPercent(0)
                     .build();
 
             // Lưu images
@@ -199,11 +199,12 @@ public class ProductVariantServiceImpl implements ProductVariantService {
         }
 
         if (discountPercent > 1.0) {
-            return ResponseEntity.badRequest().body("Discount percent must less than 1.0");
+            return ResponseEntity.badRequest().body("Discount percent must less than 0.5");
         }
 
         productVariant.get().getProduct().setDiscountPercent(discountPercent);
         productVariant.get().setDiscountPercent(discountPercent);
+        productVariant.get().setPriceDiff(productVariant.get().getPriceDiff() - productVariant.get().getPriceDiff() * discountPercent);
         productVariantRepository.save(productVariant.get());
 
         return ResponseEntity.ok().body("Product variant updated");
