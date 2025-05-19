@@ -149,13 +149,14 @@ public class UserServiceImpl implements UserService {
             // Lấy list địa chỉ theo userId
             List<Address> addresses = addressRepository.findByUserId(userId);
 
+            int loyaltyPoints = user.get().getLoyaltyPoint() != null ? user.get().getLoyaltyPoint().getPoints() : 0;
             UserResponse userResponse = UserResponse.builder()
                     .userId(user.get().getId())
                     .image(user.get().getImage())
                     .fullName(user.get().getFullName())
                     .email(user.get().getEmail())
                     .active(user.get().isActive())
-                    // .loyaltyPoints(user.get().getLoyaltyPoint() == null ? 0 : user.get().getLoyaltyPoint().getPoints())
+                    .loyaltyPoints(loyaltyPoints)
                     .addresses(addresses.stream()
                             .map(address -> AddressResponse.builder()
                                     .addressId(address.getAddress_id())
