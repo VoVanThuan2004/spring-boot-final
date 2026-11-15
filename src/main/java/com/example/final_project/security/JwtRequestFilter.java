@@ -5,95 +5,87 @@ import com.example.final_project.dto.TokenPayload;
 import com.example.final_project.entity.Role;
 import com.example.final_project.entity.User;
 import com.example.final_project.entity.UserRole;
-import com.example.final_project.repository.RoleRepository;
 import com.example.final_project.repository.UserRepository;
 import com.example.final_project.repository.UserRoleRepository;
-import com.example.final_project.util.JwtTokenUtil;
-import io.jsonwebtoken.ExpiredJwtException;
+import com.example.final_project.util.JwtUtil;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Slf4j
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
-    private final JwtTokenUtil jwtTokenUtil;
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
-    private final RoleRepository roleRepository;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String requestHeader = request.getHeader("Authorization");
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        String token = null;
-        TokenPayload tokenPayload = null;
-        if (requestHeader != null && requestHeader.startsWith("Bearer ")) {
-            token = requestHeader.substring(7);
+        if (authorizationHeader != null
+                && authorizationHeader.startsWith(BEARER_PREFIX)
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
+            String token = authorizationHeader.substring(BEARER_PREFIX.length());
             try {
-                tokenPayload = jwtTokenUtil.getTokenPayload(token);
-            } catch (ExpiredJwtException e) {
-                System.out.println("JWT token expired");
+                TokenPayload payload = jwtUtil.validateAccessToken(token);
+                authenticate(payload);
+            } catch (JwtException | IllegalArgumentException ex) {
+                log.debug("Rejected JWT: {}", ex.getMessage());
             }
-
-        }
-        else {
-            System.out.println("Authorization header is missing");
         }
 
-        if (tokenPayload != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            Optional<User> user = userRepository.findById(tokenPayload.getUserId());
-            if (user.isPresent()) {
-                Optional<UserRole> userRole = userRoleRepository.findByUserId(user.get().getId());
-                Optional<Role> role = roleRepository.findById(userRole.get().getRole().getId());
-                if (role.isPresent()) {
-                    // Chuyen Object User -> TokenPayload
-                    TokenPayload tokenPayload1 = TokenPayload.builder()
-                            .userId(user.get().getId())
-                            .fullName(user.get().getFullName())
-                            .role(role.get().getName())
-                            .build();
+        filterChain.doFilter(request, response);
+    }
 
-                    if (jwtTokenUtil.isValidToken(token, tokenPayload1)) {
-
-                        // Lưu các role: admin, user
-                        List<SimpleGrantedAuthority> authorities = List.of(
-                                new SimpleGrantedAuthority(role.get().getName())
-                        );
-
-                        // Tạo UserDetail => Lưu vào context holder
-                        UserDetails userDetails = new CustomUserDetails(
-                                user.get().getId(),
-                                user.get().getFullName(),
-                                user.get().getPassword(),
-                                user.get().getEmail(),
-                                authorities
-                        );
-                        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities()
-                        );
-
-                        // Đánh dấu user đã đăng nhập
-                        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-                    }
-                }
-
-            }
-
+    private void authenticate(TokenPayload payload) {
+        Optional<User> userOptional = userRepository.findById(payload.getUserId());
+        if (userOptional.isEmpty()) {
+            log.debug("JWT references an unknown user: {}", payload.getUserId());
+            return;
         }
 
-        filterChain.doFilter(request, response); // Cho user qua cổng
+        User user = userOptional.get();
+        if (!user.isActive()) {
+            log.debug("JWT references a locked user: {}", user.getId());
+            return;
+        }
+
+        Optional<UserRole> userRoleOptional = userRoleRepository.findByUserId(user.getId());
+        if (userRoleOptional.isEmpty() || userRoleOptional.get().getRole() == null) {
+            log.debug("JWT references a user without a role: {}", user.getId());
+            return;
+        }
+
+        Role role = userRoleOptional.get().getRole();
+        List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role.getName()));
+        UserDetails userDetails = new CustomUserDetails(
+                user.getId(),
+                user.getFullName(),
+                user.getPassword(),
+                user.getEmail(),
+                authorities
+        );
+
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

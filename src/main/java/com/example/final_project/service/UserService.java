@@ -1,6 +1,7 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.*;
+import com.example.final_project.dto.request.*;
+import com.example.final_project.dto.response.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +11,6 @@ import java.security.Principal;
 
 public interface UserService {
     ResponseEntity<String> createUser(UserCreate userCreate, MultipartFile image);
-
-    ResponseEntity<?> login(UserLogin userLogin);
 
     ResponseEntity<?> getUserById(int userId);
 

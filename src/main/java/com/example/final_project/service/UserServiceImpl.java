@@ -1,10 +1,12 @@
 package com.example.final_project.service;
 
 import com.example.final_project.cloudinary.CloudinaryService;
-import com.example.final_project.dto.*;
+import com.example.final_project.dto.request.*;
+import com.example.final_project.dto.response.*;
+import com.example.final_project.dto.TokenPayload;
 import com.example.final_project.entity.*;
+import com.example.final_project.mapper.AddressMapper;
 import com.example.final_project.repository.*;
-import com.example.final_project.util.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,11 +30,12 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenUtil jwtTokenUtil;
+    private final RefreshTokenService refreshTokenService;
     private final EmailService emailService;
     private final AddressRepository addressRepository;
     private final LoyaltyPointRepository loyaltyPointRepository;
     private final CloudinaryService cloudinaryService;
+    private final AddressMapper addressMapper;
 
     @Override
     public ResponseEntity<String> createUser(UserCreate userCreate, MultipartFile image) {
@@ -100,53 +103,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<?> login(UserLogin userLogin) {
-        // check email
-        Optional<User> user = userRepository.findByEmail(userLogin.getEmail());
-        if (user.isEmpty()) {
-            return ResponseEntity.badRequest().body("User not found");
-        }
-
-        if (!user.get().isActive()) {
-            return ResponseEntity.badRequest().body("User account locked!");
-        }
-
-        boolean isAuthentication = passwordEncoder.matches(userLogin.getPassword(), user.get().getPassword());
-        if (!isAuthentication) {
-            return ResponseEntity.badRequest().body("Username or password incorrect");
-        }
-
-        // ok -> gen token
-        final int ONE_DAY_SECONDS = 120 * 60;
-
-        Optional<UserRole> userRole = userRoleRepository.findByUserId(user.get().getId());
-        Optional<Role> role = roleRepository.findById(userRole.get().getRole().getId());
-
-        // Chuyển thông tin userlogin -> tokenpayload
-        TokenPayload tokenPayload = null;
-        if (role.isPresent()) {
-            tokenPayload = TokenPayload.builder()
-                    .fullName(user.get().getFullName())
-                    .userId(user.get().getId())
-                    .role(role.get().getName())
-                    .build();
-        }
-        String accessToken = jwtTokenUtil.generateToken(tokenPayload, ONE_DAY_SECONDS);
-        // return ve user
-        return ResponseEntity.ok().body(LoginResponse.builder()
-                .accessToken(accessToken)
-                .user(UserResponse.builder()
-                        .fullName(user.get().getFullName())
-                        .email(user.get().getEmail())
-                        .build())
-                .build());
-    }
-
-    @Override
     public ResponseEntity<?> getUserById(int userId) {
         Optional<User> user = userRepository.findById(userId);
         if (user.isPresent()) {
-            // Lấy list địa chỉ theo userId
             List<Address> addresses = addressRepository.findByUserId(userId);
 
             int loyaltyPoints = user.get().getLoyaltyPoint() != null ? user.get().getLoyaltyPoint().getPoints() : 0;
@@ -157,20 +116,7 @@ public class UserServiceImpl implements UserService {
                     .email(user.get().getEmail())
                     .active(user.get().isActive())
                     .loyaltyPoints(loyaltyPoints)
-                    .addresses(addresses.stream()
-                            .map(address -> AddressResponse.builder()
-                                    .addressId(address.getAddress_id())
-                                    .ward(address.getWard())
-                                    .wardCode(address.getWardCode())
-                                    .province(address.getProvince())
-                                    .provinceCode(address.getProvinceCode())
-                                    .district(address.getDistrict())
-                                    .districtCode(address.getDistrictCode())
-                                    .addressDetail(address.getAddressDetail())
-                                    .isDefault(address.isDefault())
-                                    .build())
-                            .toList()
-                    )
+                    .addresses(addressMapper.mapToResponseList(addresses))
                     .build();
 
             return ResponseEntity.ok().body(userResponse);
@@ -179,6 +125,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<String> changePassword(int userId, ChangePasswordRequest changePasswordRequest) {
         Optional<User> user = userRepository.findById(userId);
         if (user.isEmpty()) {
@@ -191,6 +138,7 @@ public class UserServiceImpl implements UserService {
 
         user.get().setPassword(passwordEncoder.encode(changePasswordRequest.getNewPassword()));
         userRepository.save(user.get());
+        refreshTokenService.revokeAllForUser(userId);
 
         return ResponseEntity.ok().body("Password changed");
     }
@@ -217,6 +165,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<?> resetPassword(ConfirmOTPRequest confirmOTPRequest) {
         // Check email
         Optional<User> user = userRepository.findByEmail(confirmOTPRequest.getEmail());
@@ -242,6 +191,7 @@ public class UserServiceImpl implements UserService {
         user.get().setResetOtp(null);
         user.get().setResetOtpExpiryDate(null);
         userRepository.save(user.get());
+        refreshTokenService.revokeAllForUser(user.get().getId());
 
         return ResponseEntity.ok().body("Reset password successfully");
     }
@@ -268,21 +218,9 @@ public class UserServiceImpl implements UserService {
                             .image(user.getImage())
                             .build();
 
-                    List<AddressResponse> addressResponses = user.getAddresses().stream()
-                            .map(address -> AddressResponse.builder()
-                                    .addressId(address.getAddress_id())
-                                    .isDefault(address.isDefault())
-//                                    .districtCode(address.getDistrictCode())
-                                    .district(address.getDistrict())
-//                                    .provinceCode(address.getProvinceCode())
-                                    .province(address.getProvince())
-                                    .build())
-                            .toList();
-
-                    userResponse.setAddresses(addressResponses);
+                    userResponse.setAddresses(addressMapper.mapToResponseList(user.getAddresses()));
                     return userResponse;
-                }
-        );
+        });
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.*;
+import com.example.final_project.dto.request.*;
+import com.example.final_project.dto.response.*;
+import com.example.final_project.dto.CustomUserDetails;
 import com.example.final_project.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 // Rest: RestfulAPI
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin("http://localhost:5000")
 public class UserController {
     private final UserService userService;
 
@@ -25,11 +26,6 @@ public class UserController {
             @RequestPart(required = false) MultipartFile image
     ) {
         return userService.createUser(userCreate, image);
-    }
-
-    @PostMapping("/api/v1/login")
-    public ResponseEntity<?> login(@RequestBody UserLogin userLogin) {
-        return userService.login(userLogin);
     }
 
 
