@@ -1,6 +1,5 @@
 package com.example.final_project.entity;
 
-import com.example.final_project.dto.AddressDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table
+@Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter @Setter

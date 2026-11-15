@@ -26,8 +26,9 @@ public interface OrderRepository extends JpaRepository<Order, Integer>, JpaSpeci
     double sumTotalAmountByStatus(String status);
 
     // Tính doanh thu theo tháng trong năm
-    @Query("SELECT MONTH(o.purchaseDate) as month, SUM(o.totalAmount) as revenue " +
-            "FROM Order o WHERE YEAR(o.purchaseDate) = :year GROUP BY MONTH(o.purchaseDate)")
+    @Query("SELECT EXTRACT(MONTH FROM o.purchaseDate) as month, SUM(o.totalAmount) as revenue " +
+            "FROM Order o WHERE EXTRACT(YEAR FROM o.purchaseDate) = :year " +
+            "GROUP BY EXTRACT(MONTH FROM o.purchaseDate)")
     List<Map<String, Object>> getRevenueTrendByYear(int year);
 
     // Xem lich su don hang theo user
