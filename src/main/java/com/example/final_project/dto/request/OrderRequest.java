@@ -10,6 +10,6 @@ public class OrderRequest {
     private String fullName;
     private String email;
 
-    private AddressDTO address;
+    private AddressRequest address;
     private String sessionId;
 }
