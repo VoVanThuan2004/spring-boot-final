@@ -1,8 +1,8 @@
 package com.example.final_project.service;
 
 import com.example.final_project.controller.RatingSocketController;
-import com.example.final_project.dto.RatingRequest;
-import com.example.final_project.dto.RatingResponse;
+import com.example.final_project.dto.request.RatingRequest;
+import com.example.final_project.dto.response.RatingResponse;
 import com.example.final_project.entity.Product;
 import com.example.final_project.entity.Rating;
 import com.example.final_project.entity.User;

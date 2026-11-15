@@ -1,7 +1,7 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.ProductRequest;
-import com.example.final_project.dto.ProductResponse;
+import com.example.final_project.dto.request.ProductRequest;
+import com.example.final_project.dto.response.ProductResponse;
 import com.example.final_project.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

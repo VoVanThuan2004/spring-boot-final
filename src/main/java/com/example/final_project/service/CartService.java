@@ -1,7 +1,7 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.AddToCartRequest;
-import com.example.final_project.dto.CartResponse;
+import com.example.final_project.dto.request.AddToCartRequest;
+import com.example.final_project.dto.response.CartResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;

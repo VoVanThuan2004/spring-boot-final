@@ -1,7 +1,7 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.AdminMessageRequest;
-import com.example.final_project.dto.MessageRequest;
+import com.example.final_project.dto.request.AdminMessageRequest;
+import com.example.final_project.dto.request.MessageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 

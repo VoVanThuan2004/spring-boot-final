@@ -1,8 +1,8 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.OrderRequest;
-import com.example.final_project.dto.OrderResponse;
-import com.example.final_project.dto.OrderUpdate;
+import com.example.final_project.dto.request.OrderRequest;
+import com.example.final_project.dto.response.OrderResponse;
+import com.example.final_project.dto.request.OrderUpdate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;

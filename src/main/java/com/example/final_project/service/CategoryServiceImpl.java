@@ -1,102 +1,90 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.CategoryRequest;
-import com.example.final_project.dto.CategoryResponse;
-import com.example.final_project.dto.ProductResponse;
+import com.example.final_project.dto.request.CategoryRequest;
+import com.example.final_project.dto.response.CategoryResponse;
+import com.example.final_project.dto.response.ProductResponse;
 import com.example.final_project.entity.Category;
-import com.example.final_project.entity.Product;
+import com.example.final_project.exception.BadRequestException;
+import com.example.final_project.exception.ResourceNotFoundException;
+import com.example.final_project.mapper.CategoryMapper;
+import com.example.final_project.mapper.ProductMapper;
 import com.example.final_project.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
+    private final ProductMapper productMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
-        List<Category> categories = categoryRepository.findAll();
-        List<CategoryResponse> categoriesResponse = new ArrayList<>();
-        for (Category category : categories) {
-            CategoryResponse categoryResponse = CategoryResponse.builder()
-                    .id(category.getId())
-                    .name(category.getName())
-                    .build();
-
-            categoriesResponse.add(categoryResponse);
-        }
-
-        return categoriesResponse;
+        return categoryMapper.mapToResponseList(categoryRepository.findAllByIsDeletedFalse());
     }
 
     @Override
-    public ResponseEntity<String> addCategory(CategoryRequest categoryRequest) {
-        if (categoryRequest == null) {
-            return ResponseEntity.badRequest().body("Please provide a valid category");
+    public CategoryResponse addCategory(CategoryRequest request) {
+        String name = request.getName().trim();
+        if (categoryRepository.existsByNameIgnoreCaseAndIsDeletedFalse(name)) {
+            throw new BadRequestException("Category name already exists");
         }
-
-        Category category = Category.builder()
-                .name(categoryRequest.getName())
-                .build();
-        categoryRepository.save(category);
-
-        return ResponseEntity.ok().body("Category added successfully");
+        return categoryMapper.mapToResponse(categoryRepository.save(Category.builder().name(name).build()));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CategoryResponse getCategoryById(int id) {
-        Optional<Category> category = categoryRepository.findById(id);
-        return category.map(value -> CategoryResponse.builder()
-                .id(value.getId())
-                .name(value.getName())
-                .build()).orElse(null);
+        return categoryMapper.mapToResponse(findCategory(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProductResponse> getProductsByCategory(int id) {
-        Optional<Category> category = categoryRepository.findById(id);
-        List<Product> products = category.get().getProducts();
-
-        return products.stream()
-                .map(product -> ProductResponse.builder()
-                        .id(product.getId())
-                        .name(product.getName())
-                        .image(product.getImage())
-                        .price(product.getPrice())
-                        .specs(product.getSpecs())
-                        .description(product.getDescription())
-                        .build())
-                .toList();
+        return productMapper.mapToResponseList(findCategory(id).getProducts());
     }
 
     @Override
-    public ResponseEntity<String> deleteCategory(int categoryId) {
-        Optional<Category> category = categoryRepository.findById(categoryId);
-        if (category.isEmpty()) {
-            return ResponseEntity.badRequest().body("Category not found");
-        }
-
-        categoryRepository.delete(category.get());
-        return ResponseEntity.ok().body("Category deleted successfully");
+    public void deleteCategory(int id) {
+        Category category = findCategory(id);
+        category.setDeleted(true);
+        categoryRepository.save(category);
     }
 
     @Override
-    public ResponseEntity<String> updateCategory(int categoryId, CategoryRequest categoryRequest) {
-        Optional<Category> category = categoryRepository.findById(categoryId);
-        if (category.isEmpty()) {
-            return ResponseEntity.badRequest().body("Category not found");
+    public CategoryResponse restoreCategory(int id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
+        if (!category.isDeleted()) {
+            throw new BadRequestException("Category is not deleted");
         }
+        if (categoryRepository.existsByNameIgnoreCaseAndIsDeletedFalse(category.getName())) {
+            throw new BadRequestException("An active category with the same name already exists");
+        }
+        category.setDeleted(false);
+        return categoryMapper.mapToResponse(categoryRepository.save(category));
+    }
 
-        category.get().setName(categoryRequest.getName());
-        categoryRepository.save(category.get());
-        return ResponseEntity.ok().body("Category updated successfully");
+    @Override
+    public CategoryResponse updateCategory(int id, CategoryRequest request) {
+        Category category = findCategory(id);
+        String name = request.getName().trim();
+        if (!category.getName().equalsIgnoreCase(name)
+                && categoryRepository.existsByNameIgnoreCaseAndIsDeletedFalse(name)) {
+            throw new BadRequestException("Category name already exists");
+        }
+        category.setName(name);
+        return categoryMapper.mapToResponse(categoryRepository.save(category));
+    }
+
+    private Category findCategory(int id) {
+        return categoryRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
     }
 }

@@ -1,0 +1,19 @@
+package com.example.final_project.dto.response;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter @Setter
+@Builder
+public class UserResponse {
+    private int userId;
+    private String fullName;
+    private String email;
+    private String image;
+    private boolean active;
+    private int loyaltyPoints;
+    private List<AddressResponse> addresses;
+}

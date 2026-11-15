@@ -1,7 +1,7 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.ProductRequest;
-import com.example.final_project.dto.ProductResponse;
+import com.example.final_project.dto.request.ProductRequest;
+import com.example.final_project.dto.response.ProductResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;

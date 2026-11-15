@@ -1,7 +1,7 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.CouponRequest;
-import com.example.final_project.dto.CouponResponse;
+import com.example.final_project.dto.request.CouponRequest;
+import com.example.final_project.dto.response.CouponResponse;
 import com.example.final_project.service.CouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5000")
 public class CouponController {
     private final CouponService couponService;
 

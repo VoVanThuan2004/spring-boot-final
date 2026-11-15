@@ -1,11 +1,12 @@
 package com.example.final_project.service;
 
 import com.example.final_project.cloudinary.CloudinaryService;
-import com.example.final_project.dto.ProductRequest;
-import com.example.final_project.dto.ProductResponse;
+import com.example.final_project.dto.request.ProductRequest;
+import com.example.final_project.dto.response.ProductResponse;
 import com.example.final_project.entity.Brand;
 import com.example.final_project.entity.Category;
 import com.example.final_project.entity.Product;
+import com.example.final_project.mapper.ProductMapper;
 import com.example.final_project.repository.BrandRepository;
 import com.example.final_project.repository.CategoryRepository;
 import com.example.final_project.repository.OrderItemRepository;
@@ -34,6 +35,7 @@ public class ProductServiceImpl implements ProductService {
     private final BrandRepository brandRepository;
     private final CloudinaryService cloudinaryService;
     private final OrderItemRepository orderItemRepository;
+    private final ProductMapper productMapper;
 
     @Override
     public ResponseEntity<String> addProduct(ProductRequest productRequest, MultipartFile file) {
@@ -42,13 +44,13 @@ public class ProductServiceImpl implements ProductService {
         }
 
         // Check category
-        Optional<Category> category = categoryRepository.findById(productRequest.getCategory_id());
+        Optional<Category> category = categoryRepository.findByIdAndIsDeletedFalse(productRequest.getCategory_id());
         if (category.isEmpty()) {
             return ResponseEntity.badRequest().body("Category not found");
         }
 
         // Check brand
-        Optional<Brand> brand = brandRepository.findById(productRequest.getBrand_id());
+        Optional<Brand> brand = brandRepository.findByIdAndIsDeletedFalse(productRequest.getBrand_id());
         if (brand.isEmpty()) {
             return ResponseEntity.badRequest().body("Brand not found");
         }
@@ -84,8 +86,7 @@ public class ProductServiceImpl implements ProductService {
 
         Page<Product> products = productRepository.findAll(pageable);
 
-
-        return products.map(this::mapToResponse);
+        return products.map(productMapper::mapToResponse);
     }
 
     @Override
@@ -116,26 +117,12 @@ public class ProductServiceImpl implements ProductService {
                 cb.between(root.get("price"), minPrice, maxPrice));
 
         Page<Product> productPage = productRepository.findAll(spec, pageable);
-        return productPage.map(this::mapToResponse);
+        return productPage.map(productMapper::mapToResponse);
     }
 
     @Override
     public List<ProductResponse> getAllProductsDefault() {
-        List<Product> products = productRepository.findAll();
-
-        return products.stream()
-                .map(product -> ProductResponse.builder()
-                        .id(product.getId())
-                        .name(product.getName())
-                        .price(product.getPrice())
-                        .image(product.getImage())
-                        .description(product.getDescription())
-                        .specs(product.getSpecs())
-                        .categoryName(product.getCategory().getName())
-                        .brandName(product.getBrand().getName())
-                        .createdAt(product.getCreatedAt())
-                        .build())
-                .toList();
+        return productMapper.mapToResponseList(productRepository.findAll());
     }
 
     @Override
@@ -146,12 +133,12 @@ public class ProductServiceImpl implements ProductService {
         }
 
         // Lấy category, brand
-        Optional<Category> category = categoryRepository.findById(productRequest.getCategory_id());
+        Optional<Category> category = categoryRepository.findByIdAndIsDeletedFalse(productRequest.getCategory_id());
         if (category.isEmpty()) {
             return ResponseEntity.badRequest().body("Category not found");
         }
 
-        Optional<Brand> brand = brandRepository.findById(productRequest.getBrand_id());
+        Optional<Brand> brand = brandRepository.findByIdAndIsDeletedFalse(productRequest.getBrand_id());
         if (brand.isEmpty()) {
             return ResponseEntity.badRequest().body("Brand not found");
         }
@@ -189,20 +176,6 @@ public class ProductServiceImpl implements ProductService {
         return ResponseEntity.ok().body("Product deleted successfully!");
     }
 
-
-    private ProductResponse mapToResponse(Product product) {
-        return ProductResponse.builder()
-                .id(product.getId())
-                .name(product.getName())
-                .price(product.getPrice())
-                .image(product.getImage())
-                .description(product.getDescription())
-                .specs(product.getSpecs())
-                .categoryName(product.getCategory().getName())
-                .brandName(product.getBrand().getName())
-                .build();
-    }
-
     @Override
     public List<ProductResponse> getNewProducts() {
         LocalDateTime now = LocalDateTime.now();
@@ -210,43 +183,14 @@ public class ProductServiceImpl implements ProductService {
         LocalDateTime endOfMonth = now.withDayOfMonth(now.toLocalDate().lengthOfMonth())
                 .withHour(23).withMinute(59).withSecond(59).withNano(999_999_999);
 
-        List<Product> products = productRepository.findProductsCreatedThisMonth(startOfMonth, endOfMonth);
-
-        return products.stream()
-                .map(product -> ProductResponse.builder()
-                        .id(product.getId())
-                        .name(product.getName())
-                        .price(product.getPrice())
-                        .image(product.getImage())
-                        .description(product.getDescription())
-                        .specs(product.getSpecs())
-                        .categoryName(product.getCategory().getName())
-                        .brandName(product.getBrand().getName())
-                        .createdAt(product.getCreatedAt())
-                        .discountPercent(product.getDiscountPercent())
-                        .build())
-                .toList();
+        return productMapper.mapToResponseList(
+                productRepository.findProductsCreatedThisMonth(startOfMonth, endOfMonth));
     }
 
     @Override
     public List<ProductResponse> getAllProductsBestSeller() {
         int limit = 10;
-        List<Product> products = orderItemRepository.getAllProductsBestSeller(PageRequest.of(0, limit));
-
-        return products.stream()
-                .map(product -> ProductResponse.builder()
-                        .id(product.getId())
-                        .name(product.getName())
-                        .price(product.getPrice())
-                        .description(product.getDescription())
-                        .image(product.getImage())
-                        .specs(product.getSpecs())
-                        .categoryName(product.getCategory().getName())
-                        .brandName(product.getBrand().getName())
-                        .createdAt(product.getCreatedAt())
-                        .discountPercent(product.getDiscountPercent())
-                        .build())
-                .toList();
+        return productMapper.mapToResponseList(
+                orderItemRepository.getAllProductsBestSeller(PageRequest.of(0, limit)));
     }
-
 }

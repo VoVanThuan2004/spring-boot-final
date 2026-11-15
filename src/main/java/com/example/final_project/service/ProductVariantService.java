@@ -1,8 +1,8 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.InventoryRequest;
-import com.example.final_project.dto.ProductResponse;
-import com.example.final_project.dto.ProductVariantRequest;
+import com.example.final_project.dto.request.InventoryRequest;
+import com.example.final_project.dto.response.ProductResponse;
+import com.example.final_project.dto.request.ProductVariantRequest;
 import com.example.final_project.entity.ProductVariant;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;

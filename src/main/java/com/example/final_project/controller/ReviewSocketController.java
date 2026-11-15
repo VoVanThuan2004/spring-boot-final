@@ -1,6 +1,6 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.ReviewResponse;
+import com.example.final_project.dto.response.ReviewResponse;
 import com.example.final_project.entity.Review;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

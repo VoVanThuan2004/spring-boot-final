@@ -1,6 +1,6 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.RatingRequest;
+import com.example.final_project.dto.request.RatingRequest;
 import com.example.final_project.service.RatingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

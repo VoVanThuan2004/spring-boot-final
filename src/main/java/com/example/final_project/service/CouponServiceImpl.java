@@ -1,7 +1,7 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.CouponRequest;
-import com.example.final_project.dto.CouponResponse;
+import com.example.final_project.dto.request.CouponRequest;
+import com.example.final_project.dto.response.CouponResponse;
 import com.example.final_project.entity.Coupon;
 import com.example.final_project.repository.CouponRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.MessageResponse;
+import com.example.final_project.dto.response.MessageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;

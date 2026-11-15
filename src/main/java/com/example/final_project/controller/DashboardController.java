@@ -1,6 +1,6 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.*;
+import com.example.final_project.dto.response.*;
 import com.example.final_project.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cglib.core.Local;
@@ -18,7 +18,6 @@ import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5000")
 public class DashboardController {
     private final DashboardService dashboardService;
     /*

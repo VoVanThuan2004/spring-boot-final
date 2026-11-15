@@ -32,12 +32,12 @@ public class Product {
     // Phần trăm giảm giá
     private double discountPercent;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
-    @ManyToOne
-    @JoinColumn(name = "brand_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "brand_id", nullable = false)
     private Brand brand;
 
     // 1 product có ít nhất 2 phiên bản khác.

@@ -1,6 +1,6 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.RatingRequest;
+import com.example.final_project.dto.request.RatingRequest;
 import org.springframework.http.ResponseEntity;
 
 import java.security.Principal;

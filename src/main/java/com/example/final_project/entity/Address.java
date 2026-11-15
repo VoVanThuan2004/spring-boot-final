@@ -11,7 +11,7 @@ import lombok.*;
 public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int address_id;
+    private int addressId;
 
     private String ward;
     private String wardCode;

@@ -1,8 +1,8 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.InventoryRequest;
-import com.example.final_project.dto.ProductResponse;
-import com.example.final_project.dto.ProductVariantRequest;
+import com.example.final_project.dto.request.InventoryRequest;
+import com.example.final_project.dto.response.ProductResponse;
+import com.example.final_project.dto.request.ProductVariantRequest;
 import com.example.final_project.service.ProductVariantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5000")
 public class ProductVariantController {
     private final ProductVariantService productVariantService;
 

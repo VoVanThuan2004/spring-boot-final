@@ -1,12 +1,18 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.AddressDTO;
-import org.springframework.http.ResponseEntity;
+import com.example.final_project.dto.request.AddressRequest;
+import com.example.final_project.dto.response.AddressResponse;
+
+import java.util.List;
 
 public interface AddressService {
-    ResponseEntity<?> addAddress(int userId, AddressDTO addressDTO);
+    List<AddressResponse> getAddresses(int userId);
 
-    ResponseEntity<?> updateDefaultAddress(int userId, int addressId);
+    AddressResponse addAddress(int userId, AddressRequest request);
 
-    ResponseEntity<?> deleteAddress(int addressId);
+    AddressResponse updateAddress(int userId, int addressId, AddressRequest request);
+
+    AddressResponse setDefaultAddress(int userId, int addressId);
+
+    void deleteAddress(int userId, int addressId);
 }

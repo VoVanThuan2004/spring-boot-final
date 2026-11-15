@@ -1,8 +1,8 @@
 package com.example.final_project.service;
 
 import com.example.final_project.controller.ReviewSocketController;
-import com.example.final_project.dto.ReviewRequest;
-import com.example.final_project.dto.ReviewResponse;
+import com.example.final_project.dto.request.ReviewRequest;
+import com.example.final_project.dto.response.ReviewResponse;
 import com.example.final_project.entity.Product;
 import com.example.final_project.entity.Review;
 import com.example.final_project.repository.ProductRepository;

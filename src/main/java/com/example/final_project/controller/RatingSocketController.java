@@ -1,6 +1,6 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.RatingResponse;
+import com.example.final_project.dto.response.RatingResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.RestController;

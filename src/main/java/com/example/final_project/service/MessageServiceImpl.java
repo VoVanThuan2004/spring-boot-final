@@ -2,10 +2,10 @@ package com.example.final_project.service;
 
 import com.example.final_project.cloudinary.CloudinaryService;
 import com.example.final_project.controller.MessageSocketController;
-import com.example.final_project.dto.AdminMessageRequest;
-import com.example.final_project.dto.MessageRequest;
-import com.example.final_project.dto.MessageResponse;
-import com.example.final_project.dto.UserResponse;
+import com.example.final_project.dto.request.AdminMessageRequest;
+import com.example.final_project.dto.request.MessageRequest;
+import com.example.final_project.dto.response.MessageResponse;
+import com.example.final_project.dto.response.UserResponse;
 import com.example.final_project.entity.Message;
 import com.example.final_project.entity.Role;
 import com.example.final_project.entity.User;

@@ -1,9 +1,9 @@
 package com.example.final_project.controller;
 
 import com.example.final_project.dto.CustomUserDetails;
-import com.example.final_project.dto.OrderRequest;
-import com.example.final_project.dto.OrderResponse;
-import com.example.final_project.dto.OrderUpdate;
+import com.example.final_project.dto.request.OrderRequest;
+import com.example.final_project.dto.response.OrderResponse;
+import com.example.final_project.dto.request.OrderUpdate;
 import com.example.final_project.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,7 +22,6 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5000")
 public class OrderController {
     private final OrderService orderService;
 

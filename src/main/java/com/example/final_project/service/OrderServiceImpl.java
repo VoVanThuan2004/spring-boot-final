@@ -1,6 +1,8 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.*;
+import com.example.final_project.dto.request.*;
+import com.example.final_project.dto.response.*;
+import com.example.final_project.dto.CustomUserDetails;
 import com.example.final_project.entity.*;
 import com.example.final_project.repository.*;
 import lombok.RequiredArgsConstructor;

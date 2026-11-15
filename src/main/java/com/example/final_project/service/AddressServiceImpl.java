@@ -1,16 +1,19 @@
 package com.example.final_project.service;
 
-import com.example.final_project.dto.AddressDTO;
+import com.example.final_project.dto.request.AddressRequest;
+import com.example.final_project.dto.response.AddressResponse;
 import com.example.final_project.entity.Address;
 import com.example.final_project.entity.User;
+import com.example.final_project.exception.ResourceNotFoundException;
+import com.example.final_project.mapper.AddressMapper;
 import com.example.final_project.repository.AddressRepository;
 import com.example.final_project.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -18,59 +21,92 @@ public class AddressServiceImpl implements AddressService {
 
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
+    private final AddressMapper addressMapper;
 
     @Override
-    public ResponseEntity<?> addAddress(int userId, AddressDTO addressDTO) {
-        Optional<User> user = userRepository.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        List<Address> addresses = addressRepository.findByUserId(userId);
-
-        Address address = new Address();
-        address.setUser(user.get());
-        address.setWard(addressDTO.getWard());
-        address.setWardCode(addressDTO.getWardCode());
-        address.setDistrict(addressDTO.getDistrict());
-        address.setDistrictCode(addressDTO.getDistrictCode());
-        address.setProvince(addressDTO.getProvince());
-        address.setProvinceCode(addressDTO.getProvinceCode());
-        address.setAddressDetail(addressDTO.getAddressDetail());
-        address.setDefault(addresses.isEmpty());
-
-
-        addressRepository.save(address);
-
-        return ResponseEntity.ok().body("Address added");
+    @Transactional(readOnly = true)
+    public List<AddressResponse> getAddresses(int userId) {
+        getUser(userId);
+        return addressMapper.mapToResponseList(addressRepository.findByUserId(userId));
     }
 
     @Override
-    public ResponseEntity<?> updateDefaultAddress(int userId, int addressId) {
-        Optional<User> user = userRepository.findById(userId);
-        if (user.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+    @Transactional
+    public AddressResponse addAddress(int userId, AddressRequest request) {
+        User user = getUser(userId);
+        List<Address> addresses = addressRepository.findByUserId(userId);
+
+        Address address = Address.builder()
+                .user(user)
+                .province(request.getProvince())
+                .provinceCode(request.getProvinceCode())
+                .district(request.getDistrict())
+                .districtCode(request.getDistrictCode())
+                .ward(request.getWard())
+                .wardCode(request.getWardCode())
+                .addressDetail(request.getAddressDetail())
+                .isDefault(addresses.isEmpty())
+                .build();
+
+        return addressMapper.mapToResponse(addressRepository.save(address));
+    }
+
+    @Override
+    @Transactional
+    public AddressResponse updateAddress(int userId, int addressId, AddressRequest request) {
+        Address address = getOwnedAddress(userId, addressId);
+
+        address.setProvince(request.getProvince());
+        address.setProvinceCode(request.getProvinceCode());
+        address.setDistrict(request.getDistrict());
+        address.setDistrictCode(request.getDistrictCode());
+        address.setWard(request.getWard());
+        address.setWardCode(request.getWardCode());
+        address.setAddressDetail(request.getAddressDetail());
+
+        return addressMapper.mapToResponse(addressRepository.save(address));
+    }
+
+    @Override
+    @Transactional
+    public AddressResponse setDefaultAddress(int userId, int addressId) {
+        Address target = getOwnedAddress(userId, addressId);
 
         List<Address> addresses = addressRepository.findByUserId(userId);
         for (Address address : addresses) {
-            address.setDefault(address.getAddress_id() == addressId);
+            address.setDefault(address.getAddressId() == addressId);
         }
-
         addressRepository.saveAll(addresses);
 
-        return ResponseEntity.ok().body("Address updated default");
+        return addressMapper.mapToResponse(target);
     }
 
     @Override
-    public ResponseEntity<?> deleteAddress(int addressId) {
-        Optional<Address> address = addressRepository.findById(addressId);
-        if (address.isEmpty()) {
-            return ResponseEntity.badRequest().body("Address not found");
+    @Transactional
+    public void deleteAddress(int userId, int addressId) {
+        Address address = getOwnedAddress(userId, addressId);
+        boolean wasDefault = address.isDefault();
+
+        addressRepository.delete(address);
+
+        if (wasDefault) {
+            addressRepository.findByUserId(userId).stream()
+                    .filter(remaining -> remaining.getAddressId() != addressId)
+                    .min(Comparator.comparingInt(Address::getAddressId))
+                    .ifPresent(next -> {
+                        next.setDefault(true);
+                        addressRepository.save(next);
+                    });
         }
+    }
 
-        addressRepository.delete(address.get());
+    private User getUser(int userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+    }
 
-        return ResponseEntity.ok().body("Address deleted");
+    private Address getOwnedAddress(int userId, int addressId) {
+        return addressRepository.findByAddressIdAndUserId(addressId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address", "id", addressId));
     }
 }

@@ -1,6 +1,6 @@
 package com.example.final_project.controller;
 
-import com.example.final_project.dto.ReviewRequest;
+import com.example.final_project.dto.request.ReviewRequest;
 import com.example.final_project.repository.ProductRepository;
 import com.example.final_project.repository.ReviewRepository;
 import com.example.final_project.service.ReviewService;

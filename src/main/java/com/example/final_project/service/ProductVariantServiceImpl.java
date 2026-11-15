@@ -1,10 +1,10 @@
 package com.example.final_project.service;
 
 import com.example.final_project.cloudinary.CloudinaryService;
-import com.example.final_project.dto.InventoryRequest;
-import com.example.final_project.dto.ProductResponse;
-import com.example.final_project.dto.ProductVariantRequest;
-import com.example.final_project.dto.ProductVariantResponse;
+import com.example.final_project.dto.request.InventoryRequest;
+import com.example.final_project.dto.response.ProductResponse;
+import com.example.final_project.dto.request.ProductVariantRequest;
+import com.example.final_project.dto.response.ProductVariantResponse;
 import com.example.final_project.entity.Images;
 import com.example.final_project.entity.Inventory;
 import com.example.final_project.entity.Product;
