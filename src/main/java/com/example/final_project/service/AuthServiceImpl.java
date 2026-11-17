@@ -2,6 +2,7 @@ package com.example.final_project.service;
 
 import com.example.final_project.dto.TokenPayload;
 import com.example.final_project.dto.request.UserLogin;
+import com.example.final_project.dto.response.LoginResponse;
 import com.example.final_project.dto.response.UserResponse;
 import com.example.final_project.entity.RefreshToken;
 import com.example.final_project.entity.Role;
@@ -10,7 +11,10 @@ import com.example.final_project.entity.UserRole;
 import com.example.final_project.exception.UnauthorizedException;
 import com.example.final_project.repository.UserRepository;
 import com.example.final_project.repository.UserRoleRepository;
+import com.example.final_project.security.RefreshTokenCookieService;
 import com.example.final_project.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,10 +28,11 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenCookieService refreshTokenCookieService;
 
     @Override
     @Transactional
-    public AuthResult login(UserLogin userLogin) {
+    public LoginResponse login(HttpServletResponse httpResponse, UserLogin userLogin) {
         User user = userRepository.findByEmail(userLogin.getEmail())
                 .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
@@ -44,12 +49,23 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtUtil.generateAccessToken(payload);
         String refreshToken = refreshTokenService.issue(user, payload);
 
-        return new AuthResult(accessToken, refreshToken, jwtUtil.getRefreshTokenExpirationMs(), mapUser(user));
+        refreshTokenCookieService.addRefreshTokenCookie(httpResponse, refreshToken, jwtUtil.getRefreshTokenExpirationMs());
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(role.getName())
+                .build();
     }
 
     @Override
     @Transactional
-    public AuthResult refresh(String rawRefreshToken) {
+    public LoginResponse refresh(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        // Lấy refresh token từ request
+        String rawRefreshToken = refreshTokenCookieService.getRefreshToken(httpServletRequest);
+
         RefreshToken stored = refreshTokenService.validateForRotation(rawRefreshToken);
         User user = stored.getUser();
 
@@ -65,7 +81,18 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtUtil.generateAccessToken(payload);
         String refreshToken = refreshTokenService.issue(user, payload);
 
-        return new AuthResult(accessToken, refreshToken, jwtUtil.getRefreshTokenExpirationMs(), mapUser(user));
+//        return new AuthResult(accessToken, refreshToken, jwtUtil.getRefreshTokenExpirationMs(), mapUser(user));
+
+        refreshTokenCookieService.addRefreshTokenCookie(httpServletResponse, refreshToken,
+                jwtUtil.getRefreshTokenExpirationMs());
+
+        return LoginResponse.builder()
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(role.getName())
+                .accessToken(accessToken)
+                .build();
     }
 
     @Override

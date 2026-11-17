@@ -26,21 +26,18 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody UserLogin userLogin,
                                                             HttpServletResponse response) {
-        AuthService.AuthResult result = authService.login(userLogin);
-        refreshTokenCookieService.addRefreshTokenCookie(response, result.refreshToken(),
-                result.refreshTokenExpiresInMs());
-        return ResponseEntity.ok(ApiResponse.success("Login successfully", toLoginResponse(result)));
+        LoginResponse loginResponse = authService.login(response, userLogin);
+
+        return ResponseEntity.ok(ApiResponse.success("Login successfully", loginResponse));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<LoginResponse>> refresh(HttpServletRequest request,
                                                               HttpServletResponse response) {
         try {
-            AuthService.AuthResult result = authService.refresh(
-                    refreshTokenCookieService.getRefreshToken(request));
-            refreshTokenCookieService.addRefreshTokenCookie(response, result.refreshToken(),
-                    result.refreshTokenExpiresInMs());
-            return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", toLoginResponse(result)));
+            LoginResponse loginResponse = authService.refresh(request, response);
+
+            return ResponseEntity.ok(ApiResponse.success("Token refreshed successfully", loginResponse));
         } catch (UnauthorizedException ex) {
             refreshTokenCookieService.clearRefreshTokenCookie(response);
             throw ex;
@@ -52,12 +49,5 @@ public class AuthController {
         authService.logout(refreshTokenCookieService.getRefreshToken(request));
         refreshTokenCookieService.clearRefreshTokenCookie(response);
         return ResponseEntity.ok(ApiResponse.success("Logged out successfully", null));
-    }
-
-    private LoginResponse toLoginResponse(AuthService.AuthResult result) {
-        return LoginResponse.builder()
-                .accessToken(result.accessToken())
-                .user(result.user())
-                .build();
     }
 }
