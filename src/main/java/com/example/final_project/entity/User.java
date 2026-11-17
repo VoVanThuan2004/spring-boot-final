@@ -43,6 +43,9 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<Address> addresses;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<WishList> wishlists;
+
 
     private String shippingAddress;
     // Xác thực mã OTP
