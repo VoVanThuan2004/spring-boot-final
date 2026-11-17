@@ -62,7 +62,13 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/v1/users/**").permitAll()
                         .requestMatchers("/api/v2/users/**").permitAll()
                         .requestMatchers("/api/v1/profile/**").permitAll()
-                        .requestMatchers("/api/v1/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/products/*/attributes",
+                                "/api/v1/products/*/attributes/**").permitAll()
+                        .requestMatchers(
+                                "/api/v1/products/*/attributes",
+                                "/api/v1/products/*/attributes/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/products/**").authenticated()
                         .requestMatchers("/api/v1/productVariants").permitAll()
                         .requestMatchers("/api/v1/productVariants/**").permitAll()
                         .requestMatchers("/api/v1/update/quantity").permitAll()
