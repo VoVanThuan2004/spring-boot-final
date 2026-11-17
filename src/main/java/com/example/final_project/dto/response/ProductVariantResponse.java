@@ -1,9 +1,11 @@
 package com.example.final_project.dto.response;
 
+import com.example.final_project.enums.VariantStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,18 +14,22 @@ import java.util.List;
 public class ProductVariantResponse {
     private int id;
 
+    private String sku;
     private String variantName;
-    private double costPrice;   // Giá gốc
-    private double priceDiff;   // Gia chenh lech
-    private String specs;       // Lưu thông số product json (RAM, ROM,...)
+    private String name;
+    private BigDecimal price;
+    private BigDecimal compareAtPrice;
+    private BigDecimal costPrice;
+    private double priceDiff;
+    private String specs;
+    private VariantStatus status;
 
     private LocalDateTime createdAt;
 
-    // Phần trăm giảm giá
     private double discountPercent;
 
-    // Lưu inventory
     private int quantity;
-    // Lưu images
+    private int reservedQuantity;
+    private int availableQuantity;
     private List<String> images;
 }

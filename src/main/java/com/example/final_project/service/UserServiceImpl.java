@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
         String urlImage = "";
         if (image != null) {
             try {
-                urlImage = cloudinaryService.uploadImage(image);
+                urlImage = cloudinaryService.uploadFile(image).getSecureUrl();
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed!");
             }
@@ -273,7 +273,7 @@ public class UserServiceImpl implements UserService {
         String urlImage = "";
         if (image != null) {
             try {
-                urlImage = cloudinaryService.uploadImage(image);
+                urlImage = cloudinaryService.uploadFile(image).getSecureUrl();
             } catch (Exception e) {
                 return ResponseEntity.badRequest().body("Error while uploading image");
             }

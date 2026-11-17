@@ -51,11 +51,7 @@ public class MessageServiceImpl implements MessageService {
 
         String imageUrl = "";
         if (image != null) {
-            try {
-                imageUrl = cloudinaryService.uploadImage(image);
-            } catch (IOException e) {
-                return ResponseEntity.badRequest().body("Upload image failed");
-            }
+            imageUrl = cloudinaryService.uploadFile(image).getSecureUrl();
         }
 
         // admin_id = 2
@@ -112,11 +108,7 @@ public class MessageServiceImpl implements MessageService {
 
         String imageUrl = "";
         if (image != null) {
-            try {
-                imageUrl = cloudinaryService.uploadImage(image);
-            } catch (IOException e) {
-                return ResponseEntity.badRequest().body("Upload image failed");
-            }
+            imageUrl = cloudinaryService.uploadFile(image).getSecureUrl();
         }
 
         // Nguoi nhan

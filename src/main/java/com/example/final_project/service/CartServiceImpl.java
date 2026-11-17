@@ -26,6 +26,7 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final CouponRepository couponRepository;
     private final LoyaltyPointRepository loyaltyPointRepository;
+    private final ProductImageResolver productImageResolver;
 
     @Override
     public ResponseEntity<String> addToCart(AddToCartRequest request, Principal principal) {
@@ -86,7 +87,7 @@ public class CartServiceImpl implements CartService {
             CartItem newCartItem = new CartItem();
             newCartItem.setQuantity(request.getQuantity());
             newCartItem.setVariant(productVariant.get());
-            newCartItem.setPrice(productVariant.get().getPriceDiff());
+            newCartItem.setPrice(productVariant.get().getPrice().doubleValue());
             newCartItem.setCart(cart.get());
             cartItemRepository.save(newCartItem);
         }
@@ -135,8 +136,8 @@ public class CartServiceImpl implements CartService {
             CartItemResponse cartItemResponse = CartItemResponse.builder()
                     .cartItemId(cartItem.getId())
                     .productVariantId(cartItem.getVariant().getId())
-                    .productName(cartItem.getVariant().getVariantName())
-                    .image(cartItem.getVariant().getImages().get(0).getImagePath())
+                    .productName(cartItem.getVariant().getName())
+                    .image(productImageResolver.getPrimaryImage(cartItem.getVariant()))
                     .quantity(cartItem.getQuantity())
                     .price(cartItem.getPrice())
                     .build();
@@ -322,10 +323,10 @@ public class CartServiceImpl implements CartService {
         List<CartItemResponse> cartItemResponseList = cartItemList.stream()
                 .map(cartItem -> CartItemResponse.builder()
                         .productVariantId(cartItem.getVariant().getId())
-                        .productName(cartItem.getVariant().getVariantName())
+                        .productName(cartItem.getVariant().getName())
                         .price(cartItem.getPrice())
                         .quantity(cartItem.getQuantity())
-                        .image(cartItem.getVariant().getImages().get(0).getImagePath())
+                        .image(productImageResolver.getPrimaryImage(cartItem.getVariant()))
                         .build())
                 .toList();
 

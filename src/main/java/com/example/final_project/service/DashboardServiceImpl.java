@@ -154,7 +154,7 @@ public class DashboardServiceImpl implements DashboardService {
             for (OrderItem orderItem: order.getOrderItemList()) {
                 double price = orderItem.getPrice();
                 int quantity = orderItem.getQuantity();
-                profit += (price - orderItem.getVariant().getCostPrice()) * quantity;
+                profit += (price - costPrice(orderItem)) * quantity;
             }
         }
 
@@ -199,7 +199,7 @@ public class DashboardServiceImpl implements DashboardService {
 
                     double revenue = items.stream().mapToDouble(oi -> oi.getPrice() * oi.getQuantity()).sum();
                     double profit = items.stream()
-                            .mapToDouble(oi -> (oi.getPrice() - oi.getVariant().getCostPrice()) * oi.getQuantity())
+                            .mapToDouble(oi -> (oi.getPrice() - costPrice(oi)) * oi.getQuantity())
                             .sum();
 
                     return RevenueTrendDTO.builder()
@@ -280,7 +280,7 @@ public class DashboardServiceImpl implements DashboardService {
 
             double revenue = items.stream().mapToDouble(oi -> oi.getPrice() * oi.getQuantity()).sum();
             double profit = items.stream().mapToDouble(oi ->
-                    (oi.getPrice() - oi.getVariant().getCostPrice()) * oi.getQuantity()).sum();
+                    (oi.getPrice() - costPrice(oi)) * oi.getQuantity()).sum();
             int productsSold = (int) items.stream().mapToLong(OrderItem::getQuantity).sum();
 
             Map<String, Integer> categoryMap = items.stream()
@@ -301,5 +301,11 @@ public class DashboardServiceImpl implements DashboardService {
         result.sort(Comparator.comparing(ComparativeStatDTO::getTime));
 
         return result;
+    }
+
+    private double costPrice(OrderItem item) {
+        return item.getVariant().getCostPrice() == null
+                ? 0
+                : item.getVariant().getCostPrice().doubleValue();
     }
 }

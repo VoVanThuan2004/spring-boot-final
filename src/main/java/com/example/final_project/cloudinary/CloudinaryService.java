@@ -2,6 +2,8 @@ package com.example.final_project.cloudinary;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.example.final_project.dto.response.UploadResult;
+import com.example.final_project.exception.BadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -11,32 +13,39 @@ import java.io.IOException;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class CloudinaryService {
     private final Cloudinary cloudinary;
-    private final String upload_preset;
 
+    public UploadResult uploadFile(MultipartFile file) {
+        try {
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    Map.of(
+                            "folder", "order-food",
+                            "resource_type", "auto"
+                    )
+            );
 
-    public CloudinaryService(@Value("${cloudinary.cloud_name}") String cloud_name,
-                             @Value("${cloudinary.api_key}") String api_key,
-                             @Value("${cloudinary.api_secret}") String api_secret,
-                             @Value("${cloudinary.upload_preset}") String upload_preset
-    )
-    {
-        this.upload_preset = upload_preset;
-        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", cloud_name,
-                "api_key", api_key,
-                "api_secret", api_secret
-        )
-        );
+            // Trả về url sau khi upload
+            String secureUrl = uploadResult.get("secure_url").toString();
+            String publicId = uploadResult.get("public_id").toString();
+
+            return UploadResult.builder()
+                    .secureUrl(secureUrl)
+                    .publicId(publicId)
+                    .build();
+        } catch (IOException e) {
+            throw new BadRequestException(e.getMessage());
+        }
     }
 
-    public String uploadImage(MultipartFile file) throws IOException {
-        Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
-                "upload_preset", upload_preset
-        ));
-
-        return uploadResult.get("secure_url").toString();
+    public void deleteFile(String publicId) {
+        try {
+            cloudinary.uploader().destroy(publicId, Map.of());
+        } catch (IOException e) {
+            throw new BadRequestException("Delete file failed");
+        }
     }
 }
 

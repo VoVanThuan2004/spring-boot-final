@@ -2,6 +2,8 @@ package com.example.final_project.dto.response;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @AllArgsConstructor
@@ -11,18 +13,12 @@ import java.time.LocalDateTime;
 public class ProductResponse {
     private int id;
     private String name;
-    private double price;
-    private String image;
+    private BigDecimal price;
+    private String imageUrl;
     private String description;
+    private String slug;
 
     // Lưu thông số product (RAM, ROM,...)
     private String specs;
-
-    private LocalDateTime createdAt;
-
-    private String categoryName;
-    private String brandName;
-
-    // Phần trăm giảm giá
-    private double discountPercent;
+    private Instant createdAt;
 }

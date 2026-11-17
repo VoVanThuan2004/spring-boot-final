@@ -1,13 +1,18 @@
 package com.example.final_project.entity;
 
+import com.example.final_project.enums.VariantStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Entity
-@Table
+@Table(name = "product_variant",
+        uniqueConstraints = @UniqueConstraint(name = "uk_variant_sku", columnNames = "sku"))
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -18,23 +23,44 @@ public class ProductVariant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private String variantName;
-    private double costPrice;   // Giá gốc
-    private double priceDiff;   // Gia chenh lech
-    private String specs;       // Lưu thông số product (RAM, ROM,...)
-
-    private LocalDateTime createdAt;
-
-    private double discountPercent;
-
-    @ManyToOne
-    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @OneToOne(mappedBy = "productVariant", cascade = CascadeType.ALL)
+    @Column(nullable = false, length = 100)
+    private String sku;
+
+    @Column(length = 255)
+    private String name;
+
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal price;
+
+    @Column(name = "compare_at_price", precision = 15, scale = 2)
+    private BigDecimal compareAtPrice;
+
+    @Column(name = "cost_price", precision = 15, scale = 2)
+    private BigDecimal costPrice;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private VariantStatus status = VariantStatus.ACTIVE;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    @Version
+    private long version;
+
+    @OneToOne(mappedBy = "variant", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Inventory inventory;
 
-    // Liên kết nhiều images
-    @OneToMany(mappedBy = "productVariant", cascade = CascadeType.ALL)
-    private List<Images> images;
+    @OneToMany(mappedBy = "variant", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<VariantAttributeValue> attributeValues;
 }

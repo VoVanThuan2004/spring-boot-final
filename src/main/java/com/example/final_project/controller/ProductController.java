@@ -1,12 +1,20 @@
 package com.example.final_project.controller;
 
+import com.example.final_project.dto.request.ProductFilterRequest;
 import com.example.final_project.dto.request.ProductRequest;
+import com.example.final_project.dto.response.ApiResponse;
 import com.example.final_project.dto.response.ProductResponse;
 import com.example.final_project.service.ProductService;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,16 +22,30 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/products")
 public class ProductController {
     private final ProductService productService;
 
-    @PostMapping(value = "/api/v1/products", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> addProduct(
-            @RequestPart("productRequest") ProductRequest productRequest,
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(encoding = @Encoding(
+                    name = "productRequest",
+                    contentType = MediaType.APPLICATION_JSON_VALUE
+            ))
+    )
+    public ResponseEntity<ApiResponse<ProductResponse>> addProduct(
+            @Valid @RequestPart("productRequest") ProductRequest productRequest,
             @RequestPart("file") MultipartFile file
 
     ) {
-        return productService.addProduct(productRequest, file);
+        ProductResponse productResponse = productService.addProduct(productRequest, file);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
+                HttpStatus.CREATED.value(),
+                "Created product successfully",
+                productResponse
+        ));
     }
 
     // Lấy list products
@@ -33,19 +55,46 @@ public class ProductController {
     }
 
     // Update products
-    @PutMapping("/api/v1/products/{productId}")
-    public ResponseEntity<String> updateProduct(
+    @PutMapping("/{productId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(encoding = @Encoding(
+                    name = "productRequest",
+                    contentType = MediaType.APPLICATION_JSON_VALUE
+            ))
+    )
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
             @PathVariable int productId,
-            @RequestPart("productRequest") ProductRequest productRequest,
+            @Valid @RequestPart("productRequest") ProductRequest productRequest,
             @RequestPart(value = "file", required = false) MultipartFile file
     ) {
-        return productService.updateProduct(productId, productRequest, file);
+        ProductResponse productResponse = productService.updateProduct(productId, productRequest, file);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                "Product updated successfully",
+                productResponse
+        ));
     }
 
-    // Xoá product
-    @DeleteMapping("/api/v1/products/{productId}")
-    public ResponseEntity<String> deleteProduct(@PathVariable int productId) {
-        return productService.deleteProduct(productId);
+    // Xoá mềm product
+    @DeleteMapping("/{productId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteProduct(@PathVariable int productId) {
+        boolean deleted = productService.softDeleteProduct(productId);
+        String message = deleted ? "Product deleted successfully" : "Product already archived";
+
+        return ResponseEntity.ok(ApiResponse.success(message, null));
+    }
+
+    @PatchMapping("/{productId}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<ProductResponse>> restoreProduct(@PathVariable int productId) {
+        ProductResponse productResponse = productService.restoreProduct(productId);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                "Product restored successfully",
+                productResponse
+        ));
     }
 
     // Sắp xếp theo tên - gía (tăng dần, giảm dần)
@@ -60,32 +109,26 @@ public class ProductController {
     }
 
     // Search & Filter theo price, category, brand,...
-    @GetMapping("/api/v1/products/filter")
-    public Page<ProductResponse> getFilterProducts(
-            @RequestParam(defaultValue = "") String keyword,
-            @RequestParam(required = false) List<Integer> categoryIds,
-            @RequestParam(required = false) List<Integer> brandIds,
-            @RequestParam(required = false, defaultValue = "0") double minPrice,
-            @RequestParam(required = false, defaultValue = "30000000") double maxPrice,
-            @RequestParam int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getFilterProducts(
+            @Valid @ModelAttribute @ParameterObject ProductFilterRequest request
     ) {
-        return productService.getFilterProducts(keyword, categoryIds, brandIds, minPrice, maxPrice,
-                page, size, sortBy, direction
-        );
+        Page<ProductResponse> productResponses = productService.getFilterProducts(request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("Filter product successfully", productResponses));
     }
 
     // Get sản phẩm mới
-    @GetMapping("/api/v1/products/new")
+    @GetMapping("/new")
     public List<ProductResponse> getNewProducts() {
         return productService.getNewProducts();
     }
 
     // Lây danh sách product bestseller
-    @GetMapping("/api/v1/products/best-seller")
+    @GetMapping("/best-seller")
     public List<ProductResponse> getAllProductsBestSeller() {
         return productService.getAllProductsBestSeller();
     }
+
+
 }

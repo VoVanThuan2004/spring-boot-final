@@ -39,6 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private final InventoryRepository inventoryRepository;
     private final ProductVariantRepository productVariantRepository;
     private final AddressRepository addressRepository;
+    private final ProductImageResolver productImageResolver;
 
 
     @Override
@@ -172,7 +173,7 @@ public class OrderServiceImpl implements OrderService {
             orderItem.setVariant(item.getVariant());
             orderItem.setQuantity(item.getQuantity());
             orderItem.setPrice(item.getPrice());
-            orderItem.setImage(item.getVariant().getImages().get(0).getImagePath());
+            orderItem.setImage(productImageResolver.getPrimaryImage(item.getVariant()));
             orderItemRepository.save(orderItem);
         }
 
@@ -211,7 +212,7 @@ public class OrderServiceImpl implements OrderService {
         for (CartItem item: cartItems) {
             int variantId = item.getVariant().getId();
             inventories.stream()
-                    .filter(inv -> inv.getProductVariant().getId() == variantId)
+                    .filter(inv -> inv.getVariant().getId() == variantId)
                     .findFirst()
                     .ifPresent(inv -> inv.setQuantity(inv.getQuantity() - item.getQuantity()));
         }
@@ -291,7 +292,7 @@ public class OrderServiceImpl implements OrderService {
                     List<OrderItemResponse> orderItemResponses = order.getOrderItemList().stream()
                             .map(orderItem -> OrderItemResponse.builder()
                                     .orderItemId(orderItem.getId())
-                                    .productVariantName(orderItem.getVariant().getVariantName())
+                                    .productVariantName(orderItem.getVariant().getName())
                                     .quantity(orderItem.getQuantity())
                                     .price(orderItem.getPrice())
                                     .image(orderItem.getImage())
@@ -352,7 +353,7 @@ public class OrderServiceImpl implements OrderService {
                     List<OrderItemResponse> orderItemResponses = order.getOrderItemList().stream()
                             .map(orderItem -> OrderItemResponse.builder()
                                     .orderItemId(orderItem.getId())
-                                    .productVariantName(orderItem.getVariant().getVariantName())
+                                    .productVariantName(orderItem.getVariant().getName())
                                     .quantity(orderItem.getQuantity())
                                     .price(orderItem.getPrice())
                                     .image(orderItem.getImage())
@@ -441,7 +442,7 @@ public class OrderServiceImpl implements OrderService {
                         .orderItems(order.getOrderItemList().stream()
                                 .map(orderItem -> OrderItemResponse.builder()
                                         .orderItemId(orderItem.getId())
-                                        .productVariantName(orderItem.getVariant().getVariantName())
+                                        .productVariantName(orderItem.getVariant().getName())
                                         .price(orderItem.getPrice())
                                         .quantity(orderItem.getQuantity())
                                         .image(orderItem.getImage())

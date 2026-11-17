@@ -92,7 +92,7 @@ public class EmailService {
         content.append(String.format("%-30s %-10s %-15s\n", "Sản phẩm", "Số lượng", "Giá"));
         content.append("----------------------------------------\n");
         for (CartItem item : items) {
-            String productName = item.getVariant().getVariantName();
+            String productName = item.getVariant().getName();
             // Truncate product name if too long to avoid breaking alignment
             if (productName.length() > 27) {
                 productName = productName.substring(0, 24) + "...";
